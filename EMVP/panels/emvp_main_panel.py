@@ -3,8 +3,11 @@ Main Panel of the add-on
 """
 
 from bpy.types import Panel as BpyPanel
-from ..operators.add_vertex_color_layers import AddVertexColorLayer
+from ..operators.add_vertex_color_layers import AddVertexColorLayers
 from ..operators.paint_vertex_colors import PaintVertexColors
+from ..operators.add_pbr_material import AddPBRMaterial
+from ..addon_preferences import AddonPrefs
+from ..data.maps import map_is_color
 
 
 class EMVPPanel(BpyPanel):
@@ -15,11 +18,6 @@ class EMVPPanel(BpyPanel):
     bl_region_type = 'UI'
     bl_category = 'EMVP'
 
-    # @classmethod
-    # def poll(cls, context):
-    #     ao = context.active_object
-    #     return ao and context.active_object.type == 'MESH'
-
     def draw(self, context):
         layout = self.layout
 
@@ -27,35 +25,37 @@ class EMVPPanel(BpyPanel):
 
         if not ao or ao.type != 'MESH' or len(context.selected_objects) != 1:
             layout.label(
-                text="Please select a single mesh object", icon='ERROR')
+                text="Select a single mesh object", icon='ERROR')
             return
 
-        if AddVertexColorLayer.poll(context):
-            layout.operator(AddVertexColorLayer.bl_idname)
+        if AddVertexColorLayers.poll(context):
+            if context.mode != 'OBJECT':
+                layout.label(text="Press TAB for OBJECT mode", icon='ERROR')
+            else:
+                layout.operator(AddVertexColorLayers.bl_idname)
         else:
-            # layout.prop(kmi.properties, "map")
-            # if (get_color_map() == PaintVertexColors.map_enum_color[0]):
-            #     layout.prop(kmi.properties, "color")
-            # else:
-            #     layout.prop(kmi.properties, "strength", slider=True)
+            prefs = context.preferences.addons.get(AddonPrefs.bl_idname).preferences
+            layout.prop(prefs, "map")
+            if map_is_color(prefs.map):
+                layout.prop(prefs, "color")
+            else:
+                layout.prop(prefs, "strength", slider=True)
 
             row = layout.row()
             row.label(text="Paint")
             sub_row = row.row()
+
             op_only_selected = sub_row.operator(PaintVertexColors.bl_idname, text="Selected")
             op_only_selected.only_selected = True
-            op.color =  [1, 0, 0, 1]
-            op.map = PaintVertexColors.map_enum_color[0]
-            op.strength = 1
             sub_row.enabled = context.mode == "EDIT_MESH"
 
-            # op_all_faces = row.operator(PaintVertexColors.bl_idname, text="All")
-            # op_all_faces.only_selected = False
+            op_all_faces = row.operator(PaintVertexColors.bl_idname, text="All")
+            op_all_faces.only_selected = False
 
             # layout.operator(SelectFacesWithSameColor.bl_idname)
-            # layout.operator(AddVertexColorPreviewMaterial.bl_idname)
+            layout.operator(AddPBRMaterial.bl_idname)
 
-            # for op in (op_only_selected, op_all_faces):
-            #     op.color =  kmi.properties.color
-            #     op.map = kmi.properties.map
-            #     op.strength = kmi.properties.strength
+            for op in (op_only_selected, op_all_faces):
+                op.color = prefs.color
+                op.map = prefs.map
+                op.strength = prefs.strength

@@ -3,7 +3,7 @@ Operator to paint selected vertex color onto the selected face(s)
 """
 
 import bpy
-from ..data_structures.color_layers import *
+from ..data.maps import all_maps, map_color_layer, map_channels, map_is_color
 
 
 class PaintVertexColors(bpy.types.Operator):
@@ -20,30 +20,16 @@ class PaintVertexColors(bpy.types.Operator):
         min=0,
         max=1,)
 
-    map_enum_color = ("Color", "Color", "Color")
-    map_enum_alpha = ("Alpha", "Alpha", "Alpha")
-    map_enum_metallic = ("Metallic", "Metallic", "Metallic")
-    map_enum_specular = ("Specular", "Specular", "Specular")
-    map_enum_roughness = ("Roughness", "Roughness", "Roughness")
-    map_enum_transmission = ("Transmission", "Transmission", "Transmission")
-
     map: bpy.props.EnumProperty(
         name="Map",
-        items=[
-            map_enum_color,
-            map_enum_alpha,
-            map_enum_metallic,
-            map_enum_specular,
-            map_enum_roughness,
-            map_enum_transmission,
-        ],
+        items=all_maps,
     )
 
     strength: bpy.props.FloatProperty(
         name="Strength",
         default=1,
         min=0,
-        soft_max=1,
+        soft_max=2,
         max=4.875,
     )
 
@@ -68,23 +54,17 @@ class PaintVertexColors(bpy.types.Operator):
 
         bpy.ops.paint.vertex_paint_toggle()
         bpy.ops.paint.vertex_paint_toggle()
-        color_layer = self.get_vertex_color_layer(mesh)
-#        if self.map in (
-#            PaintVertexColors.map_enum_color[0],
-#            PaintVertexColors.map_enum_alpha[0]):
-#            color_layer = mesh.vertex_colors.get(AddVertexColorLayer.color_alpha_layer)
-#        elif self.map in (
-#            PaintVertexColors.map_enum_metallic[0],
-#            PaintVertexColors.map_enum_specular[0],
-#            PaintVertexColors.map_enum_roughness[0],
-#            PaintVertexColors.map_enum_transmission[0],
-#            ):
-#            color_layer = mesh.vertex_colors.get(AddVertexColorLayer.msrt_layer)
+
+        color_layer = mesh.vertex_colors.get(map_color_layer[self.map])
+
         if not color_layer:
+            print(
+                f"No vertex color layer named {color_layer.name} on selected object")
             return {'FINISHED'}
+
         only_selected = self.only_selected
 
-        if self.map == PaintVertexColors.map_enum_color[0]:
+        if map_is_color(self.map):
             r, g, b = self.color[0:3]
             for poly in mesh.polygons:
                 if only_selected and not poly.select:
@@ -92,41 +72,36 @@ class PaintVertexColors(bpy.types.Operator):
                 for idx in poly.loop_indices:
                     color_layer.data[idx].color = [
                         r, g, b, color_layer.data[idx].color[3]]
-        elif self.map == PaintVertexColors.map_enum_alpha[0]:
-            for poly in mesh.polygons:
-                if only_selected and not poly.select:
-                    continue
-                for idx in poly.loop_indices:
-                    r, g, b = color_layer.data[idx].color[0:3]
-                    color_layer.data[idx].color = [r, g, b, self.strength]
-        elif self.map == PaintVertexColors.map_enum_metallic[0]:
-            for poly in mesh.polygons:
-                if only_selected and not poly.select:
-                    continue
-                for idx in poly.loop_indices:
-                    r, g, b, a = color_layer.data[idx].color
-                    color_layer.data[idx].color = [self.strength, g, b, a]
-        elif self.map == PaintVertexColors.map_enum_specular[0]:
-            for poly in mesh.polygons:
-                if only_selected and not poly.select:
-                    continue
-                for idx in poly.loop_indices:
-                    r, g, b, a = color_layer.data[idx].color
-                    color_layer.data[idx].color = [r, self.strength, b, a]
-        elif self.map == PaintVertexColors.map_enum_roughness[0]:
-            for poly in mesh.polygons:
-                if only_selected and not poly.select:
-                    continue
-                for idx in poly.loop_indices:
-                    r, g, b, a = color_layer.data[idx].color
-                    color_layer.data[idx].color = [r, g, self.strength, a]
-        elif self.map == PaintVertexColors.map_enum_transmission[0]:
-            for poly in mesh.polygons:
-                if only_selected and not poly.select:
-                    continue
-                for idx in poly.loop_indices:
-                    r, g, b, a = color_layer.data[idx].color
-                    color_layer.data[idx].color = [r, g, b, self.strength]
+        else:
+            channel = map_channels[self.map]
+            if channel == 0:
+                for poly in mesh.polygons:
+                    if only_selected and not poly.select:
+                        continue
+                    for idx in poly.loop_indices:
+                        r, g, b, a = color_layer.data[idx].color
+                        color_layer.data[idx].color = [self.strength, g, b, a]
+            elif channel == 1:
+                for poly in mesh.polygons:
+                    if only_selected and not poly.select:
+                        continue
+                    for idx in poly.loop_indices:
+                        r, g, b, a = color_layer.data[idx].color
+                        color_layer.data[idx].color = [r, self.strength, b, a]
+            elif channel == 2:
+                for poly in mesh.polygons:
+                    if only_selected and not poly.select:
+                        continue
+                    for idx in poly.loop_indices:
+                        r, g, b, a = color_layer.data[idx].color
+                        color_layer.data[idx].color = [r, g, self.strength, a]
+            else:
+                for poly in mesh.polygons:
+                    if only_selected and not poly.select:
+                        continue
+                    for idx in poly.loop_indices:
+                        r, g, b, a = color_layer.data[idx].color
+                        color_layer.data[idx].color = [r, g, b, self.strength]
 
         if prev_mode:
             if prev_mode == 'EDIT_MESH':
@@ -138,23 +113,8 @@ class PaintVertexColors(bpy.types.Operator):
 
     def draw(self, context):
         layout = self.layout
-        if self.map == PaintVertexColors.map_enum_color[0]:
+        if map_is_color(self.map):
             layout.prop(self, "color")
         else:
             layout.prop(self, "strength", slider=True)
         layout.prop(self, "map")
-
-    def get_vertex_color_layer(self, mesh):
-        color_map = self.map
-        if color_map in (
-                PaintVertexColors.map_enum_color[0],
-                PaintVertexColors.map_enum_alpha[0]):
-            return mesh.vertex_colors.get(color_alpha_layer)
-        if color_map in (
-                PaintVertexColors.map_enum_metallic[0],
-                PaintVertexColors.map_enum_specular[0],
-                PaintVertexColors.map_enum_roughness[0],
-                PaintVertexColors.map_enum_transmission[0],
-        ):
-            return mesh.vertex_colors.get(msrt_layer)
-        return None
