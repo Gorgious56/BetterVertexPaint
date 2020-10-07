@@ -3,12 +3,13 @@ Main Panel of the add-on
 """
 
 from bpy.types import Panel as BpyPanel
-from ..operators.add_vertex_color_layers import AddVertexColorLayers
+from ..operators.add_vertex_color_layers import ResetVertexColorLayers
 from ..operators.paint_vertex_colors import PaintVertexColors
 from ..operators.add_pbr_material import AddPBRMaterial
 from ..operators.select_faces_with_same_data import SelectFacesWithSameData
 from ..addon_preferences import AddonPrefs
 from ..data.maps import map_is_color
+from ..data.color_layers import are_all_layers_created
 
 
 class EMVPPanel(BpyPanel):
@@ -29,11 +30,14 @@ class EMVPPanel(BpyPanel):
                 text="Select a single mesh object", icon='ERROR')
             return
 
-        if AddVertexColorLayers.poll(context):
+        if not are_all_layers_created(ao.data):
             if context.mode != 'OBJECT':
                 layout.label(text="Press TAB for OBJECT mode", icon='ERROR')
             else:
-                layout.operator(AddVertexColorLayers.bl_idname)
+                op = layout.operator(ResetVertexColorLayers.bl_idname)
+                op.reset_all_maps = True
+                op.only_selected_faces = False
+                op.force_reset = False
         else:
             prefs = context.preferences.addons.get(
                 AddonPrefs.bl_idname).preferences
@@ -45,6 +49,7 @@ class EMVPPanel(BpyPanel):
 
             self.draw_paint_ops(context, prefs)
             self.draw_select_ops(context, prefs)
+            self.draw_reset_ops(context, prefs)
 
             layout.operator(AddPBRMaterial.bl_idname)
 
@@ -79,3 +84,27 @@ class EMVPPanel(BpyPanel):
 
         for op in (select_same, select_invert):
             op.map = prefs.map
+
+    def draw_reset_ops(self, context, prefs):
+        box = self.layout.box()
+        row = box.row()
+        row.label(text="Reset")
+        sub_row = row.row()
+
+        op_only_selected = sub_row.operator(
+            ResetVertexColorLayers.bl_idname, text="Selected Faces")
+        sub_row.enabled = context.mode == "EDIT_MESH"
+        op_only_selected.only_selected_faces = True
+
+        op_all_faces = row.operator(
+            ResetVertexColorLayers.bl_idname, text="All Faces")
+        op_all_faces.only_selected_faces = False
+
+        row = box.row()
+        row.label(text="")
+        row.prop(prefs, "reset_all_maps", text="Reset All Maps")
+
+        for op in (op_only_selected, op_all_faces):
+            op.reset_all_maps = prefs.reset_all_maps
+            op.selected_map = prefs.map
+            op.force_reset = True

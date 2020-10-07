@@ -33,6 +33,10 @@ class AddonPrefs(AddonPreferences):
         soft_max=1,
         max=4.875,
     )
+    reset_all_maps: bpy.props.BoolProperty(
+        name="Reset All Maps",
+        default=True
+    )
     """
     def draw(self, context):
         layout = self.layout

@@ -60,12 +60,12 @@ class AddPBRMaterial(bpy.types.Operator):
 
         vc_subsurface.layer_name = layer_sc_s
         links.new(vc_subsurface.outputs[0], bsdf.inputs[3])  # Subsurface color
-        links.new(vc_subsurface.outputs[1], bsdf.inputs[1])  # Subsurface strength
+        # Subsurface strength
+        links.new(vc_subsurface.outputs[1], bsdf.inputs[1])
 
         vc_emi_ior.layer_name = layer_emi_ior
         links.new(vc_emi_ior.outputs[0], bsdf.inputs[17])  # Emission
         # links.new(vc_emi_ior.outputs[1], bsdf.inputs[14])  # IOR
-
 
         links.new(bsdf.outputs[0], output.inputs[0])  # Main output
 
