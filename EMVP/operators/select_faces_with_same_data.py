@@ -48,12 +48,12 @@ class SelectFacesWithSameData(bpy.types.Operator):
         # I don't know why but edit mesh bmesh is constantly crashing :
         bpy.ops.object.editmode_toggle()
         bpy.ops.object.editmode_toggle()
-        for f in mesh.polygons:
+        for i, f in enumerate(mesh.polygons):
             if f.select:
-                sf = f
+                sf = i
                 break
 
-        if not sf:
+        if sf is None:
             print("No face selected")
             return {'FINISHED'}
 
