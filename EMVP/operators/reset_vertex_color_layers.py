@@ -52,13 +52,6 @@ class ResetVertexColorLayers(bpy.types.Operator):
         bpy.ops.paint.vertex_paint_toggle()
 
         if self.only_selected_faces:
-            bpy.ops.paint.vertex_paint_toggle()
-            bpy.ops.paint.vertex_paint_toggle()
-
-            selected_faces = []
-            for i, f in enumerate(mesh.polygons):
-                if f.select:
-                    selected_faces.append(i)
             if self.reset_all_maps:
                 set_layers_to_default(
                     mesh, self.force_reset, only_selected=self.only_selected_faces)

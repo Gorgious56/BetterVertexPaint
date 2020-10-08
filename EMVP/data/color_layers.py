@@ -69,3 +69,31 @@ def are_all_layers_created(mesh):
         if color_layer_name not in vertex_color_names:
             return False
     return True
+
+def get_data_from_face(color_layer, face, channel=None):
+    if channel is None:
+        return color_layer.data[face.loop_indices[0]].color
+    return color_layer.data[face.loop_indices[0]].color[channel]
+
+def add_to_data(mesh, color_layer_name, only_selected_faces, data, channel):
+    color_layer = mesh.vertex_colors[color_layer_name]
+    if only_selected_faces:  # Reset only selected faces
+        for poly in mesh.polygons:
+            if not poly.select:
+                continue
+            for idx in poly.loop_indices:
+                if channel is None:  # Adding color
+                    color_layer.data[idx].color = [c + data[i] for i, c in enumerate(color_layer.data[idx].color)]
+                else:
+                    color = color_layer.data[idx].color
+                    color[channel] += data
+                    color_layer.data[idx].color = color
+    else:  # Reset all faces
+        for poly in mesh.polygons:
+            for idx in poly.loop_indices:
+                if channel is None:
+                    color_layer.data[idx].color = [c + data[i] for i, c in enumerate(color_layer.data[idx].color)]
+                else:
+                    color = color_layer.data[idx].color
+                    color[channel] += data
+                    color_layer.data[idx].color = color

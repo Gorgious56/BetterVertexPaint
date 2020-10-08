@@ -4,6 +4,7 @@ the same data in the same channel as the one selected
 """
 
 import bpy
+from ..data.color_layers import get_data_from_face
 from ..data.maps import all_maps, map_color_layer, map_is_color, map_channels
 
 
@@ -35,12 +36,10 @@ class SelectFacesWithSameData(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         # TODO Find a way to poll when exactly one face is selected (bmesh ?) without crashing
-        if not context.active_object \
-                or context.active_object.type != 'MESH' \
-                or len(context.active_object.data.polygons) < 1 \
-                or context.mode != 'EDIT_MESH':
-            return False
-        return True
+        return context.active_object \
+            and context.active_object.type == 'MESH' \
+            and len(context.active_object.data.polygons) > 0 \
+            and context.mode == 'EDIT_MESH'
 
     def execute(self, context):
         mesh = context.active_object.data
@@ -67,24 +66,22 @@ class SelectFacesWithSameData(bpy.types.Operator):
 
         channel = map_channels[self.map]
         if map_is_color(self.map):
-            color = color_layer.data[mesh.polygons[sf].loop_indices[0]].color[0:3]
+            color = get_data_from_face(color_layer, mesh.polygons[sf])
             # TODO : Unselect edges and vertices.
             for f in mesh.polygons:
                 same_color = True
-                color_data = color_layer.data[f.loop_indices[0]].color[0:3]
+                color_data = get_data_from_face(color_layer, f)
                 for i, channel in enumerate(color):
                     if abs(channel - color_data[i]) > self.threshold:
                         same_color = False
                         break
                 f.select = not self.invert if same_color else self.invert
         else:
-            color = color_layer.data[mesh.polygons[sf].loop_indices[0]
-                                     ].color[channel]
+            data = get_data_from_face(color_layer, mesh.polygons[sf], channel)
             # TODO : Unselect edges and vertices.
             for f in mesh.polygons:
-                same = abs(
-                    color_layer.data[f.loop_indices[0]].color[channel] - color) > self.threshold
-                f.select = self.invert if same else not self.invert
+                f.select = self.invert if abs(get_data_from_face(
+                    color_layer, f, channel) - data) > self.threshold else not self.invert
         bpy.ops.object.editmode_toggle()
 
         return {'FINISHED'}
