@@ -7,6 +7,7 @@ from ..operators.add_vertex_color_layers import ResetVertexColorLayers
 from ..operators.paint_vertex_colors import PaintVertexColors
 from ..operators.add_pbr_material import AddPBRMaterial
 from ..operators.select_faces_with_same_data import SelectFacesWithSameData
+from ..operators.tweak_vertex_color_data import TweakVertexColorData
 from ..addon_preferences import AddonPrefs
 from ..data.maps import map_is_color
 from ..data.color_layers import are_all_layers_created
@@ -48,6 +49,7 @@ class EMVPPanel(BpyPanel):
                 layout.prop(prefs, "strength", slider=True)
 
             self.draw_paint_ops(context, prefs)
+            self.draw_tweak_ops(context, prefs)
             self.draw_select_ops(context, prefs)
             self.draw_reset_ops(context, prefs)
 
@@ -71,6 +73,47 @@ class EMVPPanel(BpyPanel):
             op.color = prefs.color
             op.map = prefs.map
             op.strength = prefs.strength
+
+    def draw_tweak_ops(self, context, prefs):
+        box = self.layout.box()
+
+        row = box.row()
+        sub_row = row.row()
+        add_data_to_selected = sub_row.operator(
+            TweakVertexColorData.bl_idname, text="Add to Selected")
+        add_data_to_selected.add = True
+        add_data_to_selected.only_selected_faces = True
+        sub_row.enabled = context.mode == 'EDIT_MESH'
+        add_data_to_all = row.operator(
+            TweakVertexColorData.bl_idname, text="Add to All")
+        add_data_to_all.add = True
+        add_data_to_all.only_selected_faces = False
+
+        row = box.row()
+        sub_row = row.row()
+        rem_data_to_selected = sub_row.operator(
+            TweakVertexColorData.bl_idname, text="Remove from Selected")
+        rem_data_to_selected.add = False
+        rem_data_to_selected.only_selected_faces = True
+        sub_row.enabled = context.mode == 'EDIT_MESH'
+        rem_data_to_all = row.operator(
+            TweakVertexColorData.bl_idname, text="Remove from All")
+        rem_data_to_all.add = False
+        rem_data_to_all.only_selected_faces = False
+
+        for op in (add_data_to_all, add_data_to_selected, rem_data_to_all, rem_data_to_selected):
+            op.color = prefs.color
+            op.strength = prefs.strength
+            op.map = prefs.map
+
+    def draw_copy_ops(self, context, use_color):
+        box = self.layout.box()
+        row = box.row()
+        # row.label(text="Copy Data")
+        sub_row = row.row()
+
+        sub_row.operator(CopyVertexColorData.bl_idname,
+                         text="Copy " + ("Color" if use_color else "Data"))
 
     def draw_select_ops(self, context, prefs):
         row = self.layout.row()
