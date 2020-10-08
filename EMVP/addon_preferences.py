@@ -35,8 +35,13 @@ class AddonPrefs(AddonPreferences):
     )
     reset_all_maps: bpy.props.BoolProperty(
         name="Reset All Maps",
-        default=True
+        default=False
     )
+
+    @staticmethod
+    def get_preferences(context):
+        return context.preferences.addons.get(
+            AddonPrefs.bl_idname).preferences
     """
     def draw(self, context):
         layout = self.layout
