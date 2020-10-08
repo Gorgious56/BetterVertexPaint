@@ -68,6 +68,5 @@ map_color_layer = \
         alpha_map_name: layer_color_alpha,
     }
 
-
 def map_is_color(map_value):
-    return "color" in map_value.lower()
+    return "color" in str(map_value).lower()
