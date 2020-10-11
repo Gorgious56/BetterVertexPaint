@@ -4,10 +4,11 @@ Define the add-on preferences
 
 import bpy
 from bpy.types import AddonPreferences
-from .data.maps import all_maps
+from .paint_logic.maps import all_maps
+from .paint_logic import on_setting_change
 
 
-class AddonPrefs(AddonPreferences):
+class BVPAddonPrefs(AddonPreferences):
     """
     Add-on Preferences
     """
@@ -25,20 +26,19 @@ class AddonPrefs(AddonPreferences):
     map: bpy.props.EnumProperty(
         name="Map",
         items=all_maps,
+        update=on_setting_change.update_prefs,
     )
     strength: bpy.props.FloatProperty(
         name="Strength",
         default=1,
         min=0,
         soft_max=1,
-        max=4.875,
+        update=on_setting_change.update_prefs,
     )
-    reset_all_maps: bpy.props.BoolProperty(
-        name="Reset All Maps",
-        default=False
+        update=on_setting_change.update_prefs,
     )
 
-    @staticmethod
+addon_name = BVPAddonPrefs.bl_idname
     def get_preferences(context):
         return context.preferences.addons.get(
             AddonPrefs.bl_idname).preferences
