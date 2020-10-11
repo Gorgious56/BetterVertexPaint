@@ -3,6 +3,7 @@ Base module to enter Blender
 """
 
 from . import auto_load
+from .paint_logic import input_handler
 
 bl_info = {
     "name": "EMVP",
@@ -20,7 +21,9 @@ al = auto_load.AutoLoad()
 
 def register():
     al.register()
+    input_handler.create_keymap()
 
 
 def unregister():
     al.unregister()
+    input_handler.remove_keymap()
