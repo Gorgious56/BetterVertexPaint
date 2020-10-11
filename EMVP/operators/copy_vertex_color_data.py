@@ -4,9 +4,9 @@ This operator copies the vertex color data of the currently selected face
 """
 
 import bpy
-from ..data.color_layers import get_data_from_face
-from ..data.maps import map_color_layer, map_is_color, map_channels
-from ..addon_preferences import AddonPrefs
+from ..paint_logic.color_layers import get_data_from_face
+from ..paint_logic.maps import map_color_layer, map_is_color, map_channels
+from ..addon_preferences import get_preferences
 
 
 class CopyVertexColorData(bpy.types.Operator):
@@ -32,7 +32,7 @@ class CopyVertexColorData(bpy.types.Operator):
         bpy.ops.paint.vertex_paint_toggle()
         bpy.ops.paint.vertex_paint_toggle()
 
-        prefs = AddonPrefs.get_preferences(context)
+        prefs = get_preferences(context)
         _map = prefs.map
         color_layer = mesh.vertex_colors.get(map_color_layer[_map])
         if not color_layer:

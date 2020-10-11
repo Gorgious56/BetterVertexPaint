@@ -1,17 +1,17 @@
 """
 Main Panel of the add-on
-"""
-
+"""     
 from bpy.types import Panel as BpyPanel
-from ..operators.reset_vertex_color_layers import ResetVertexColorLayers
-from ..operators.paint_vertex_colors import PaintVertexColors
-from ..operators.add_pbr_material import AddPBRMaterial
+from ..operators.reset_vertex_color_layers import BVP_ResetVertexColorLayers
+from ..operators.set_vertex_colors import BVP_SetVertexColors
+# from ..operators.add_pbr_material import AddPBRMaterial
 from ..operators.select_faces_with_same_data import SelectFacesWithSameData
 from ..operators.copy_vertex_color_data import CopyVertexColorData
 from ..operators.tweak_vertex_color_data import TweakVertexColorData
-from ..addon_preferences import AddonPrefs
-from ..data.maps import map_is_color
-from ..data.color_layers import are_all_layers_created
+from ..operators.update_dirt import UpdateDirt
+from ..addon_preferences import get_preferences
+from ..paint_logic.maps import map_is_color
+from ..paint_logic.color_layers import are_all_layers_created
 
 
 class EMVPPanel(BpyPanel):
@@ -34,15 +34,15 @@ class EMVPPanel(BpyPanel):
 
         if not are_all_layers_created(ao.data):
             if context.mode != 'OBJECT':
-                layout.label(text="Press TAB for OBJECT mode", icon='ERROR')
+                layout.label(text="Go into OBJECT mode", icon='ERROR')
             else:
                 op = layout.operator(
-                    ResetVertexColorLayers.bl_idname, text="Set Vertex Color Layers    ")
+                    BVP_ResetVertexColorLayers.bl_idname, text="Set Vertex Color Layers")
                 op.reset_all_maps = True
                 op.only_selected_faces = False
                 op.force_reset = False
         else:
-            prefs = AddonPrefs.get_preferences(context)
+            prefs = get_preferences(context)
             layout.prop(prefs, "map")
             use_color = map_is_color(prefs.map)
             if use_color:
@@ -55,8 +55,10 @@ class EMVPPanel(BpyPanel):
             self.draw_copy_ops(context, use_color)
             self.draw_select_ops(context, prefs)
             self.draw_reset_ops(context, prefs)
+            self.draw_dirt_ops(context)
 
-            layout.operator(AddPBRMaterial.bl_idname)
+            # layout.operator(AddPBRMaterial.bl_idname)
+
 
     def draw_paint_ops(self, context, prefs):
         box = self.layout.box()
@@ -65,12 +67,12 @@ class EMVPPanel(BpyPanel):
         sub_row = row.row()
 
         op_only_selected = sub_row.operator(
-            PaintVertexColors.bl_idname, text="Paint Selected")
+            BVP_SetVertexColors.bl_idname, text="Paint Selected")
         op_only_selected.only_selected = True
         sub_row.enabled = context.mode == "EDIT_MESH"
 
         op_all_faces = row.operator(
-            PaintVertexColors.bl_idname, text="Paint All")
+            BVP_SetVertexColors.bl_idname, text="Paint All")
         op_all_faces.only_selected = False
 
         for op in (op_only_selected, op_all_faces):
@@ -140,12 +142,12 @@ class EMVPPanel(BpyPanel):
         sub_row = row.row()
 
         op_only_selected = sub_row.operator(
-            ResetVertexColorLayers.bl_idname, text="Reset Selected")
+            BVP_ResetVertexColorLayers.bl_idname, text="Reset Selected")
         sub_row.enabled = context.mode == "EDIT_MESH"
         op_only_selected.only_selected_faces = True
 
         op_all_faces = row.operator(
-            ResetVertexColorLayers.bl_idname, text="Reset All")
+            BVP_ResetVertexColorLayers.bl_idname, text="Reset All")
         op_all_faces.only_selected_faces = False
 
         row = box.row()
@@ -156,3 +158,14 @@ class EMVPPanel(BpyPanel):
             op.reset_all_maps = prefs.reset_all_maps
             op.selected_map = prefs.map
             op.force_reset = True
+
+    def draw_dirt_ops(self, context):
+        box = self.layout.box()
+        row = box.row()
+        row.operator(UpdateDirt.bl_idname, text="Update Dirt")
+        # mat = bpy.data.materials.get(AddPBRMaterial.mat_name)
+        # if mat:
+        #     node = mat.node_tree.nodes.get(AddPBRMaterial.dirt_mix_name)
+        #     if node:
+        #         row.prop(node.inputs[0], "default_value", text="Factor")
+        # box.operator("paint.vertex_color_dirt")

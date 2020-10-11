@@ -3,8 +3,8 @@ This operator is used to add or retract values to the data of a given vertex col
 """
 
 import bpy
-from ..data.color_layers import add_to_data
-from ..data.maps import map_color_layer, all_maps, map_is_color, map_channels
+from ..paint_logic.color_layers import add_to_data
+from ..paint_logic.maps import map_color_layer, all_maps, map_is_color, map_channels
 
 
 class TweakVertexColorData(bpy.types.Operator):

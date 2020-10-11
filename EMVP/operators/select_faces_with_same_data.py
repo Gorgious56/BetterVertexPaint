@@ -4,8 +4,8 @@ the same data in the same channel as the one selected
 """
 
 import bpy
-from ..data.color_layers import get_data_from_face
-from ..data.maps import all_maps, map_color_layer, map_is_color, map_channels
+from ..paint_logic.color_layers import get_data_from_face
+from ..paint_logic.maps import all_maps, map_color_layer, map_is_color, map_channels
 
 
 class SelectFacesWithSameData(bpy.types.Operator):
@@ -56,8 +56,8 @@ class SelectFacesWithSameData(bpy.types.Operator):
             print("No face selected")
             return {'FINISHED'}
 
-        bpy.ops.paint.vertex_paint_toggle()
-        bpy.ops.paint.vertex_paint_toggle()
+        # bpy.ops.paint.vertex_paint_toggle()
+        # bpy.ops.paint.vertex_paint_toggle()
         color_layer = mesh.vertex_colors.get(map_color_layer[self.map])
         if not color_layer:
             print(

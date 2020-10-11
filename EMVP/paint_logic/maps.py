@@ -2,7 +2,7 @@
 Store enum values to access in layout properties
 """
 
-from .color_layers import layer_color_alpha, layer_emi_ior, layer_msrt, layer_sc_s
+from . import color_layers as layers
 
 all_maps = [
     # 0 :
@@ -20,11 +20,13 @@ all_maps = [
     # 6 :
     ("Transmission",) * 3,
     # 7 :
-    ("---Placeholder---",) * 3,
+    ("Emission Strength",) * 3,
     # 8 :
     ("Emission Color",) * 3,
     # 9 :
     ("Alpha",) * 3,
+    # 10 :
+    ("Bump",) * 3,
 ]
 
 
@@ -35,38 +37,42 @@ metallic_map_name = all_maps[3][0]
 specular_map_name = all_maps[4][0]
 roughness_map_name = all_maps[5][0]
 transmission_map_name = all_maps[6][0]
-ior_map_name = all_maps[7][0]
+emi_str_map_name = all_maps[7][0]
 emission_color_map_name = all_maps[8][0]
 alpha_map_name = all_maps[9][0]
+bump_map_name = all_maps[10][0]
 
 
 map_channels = \
     {
         color_map_name: -1,
         subsurface_color_map_name: -1,
-        subsurface_strength_map_name: 3,
+        emission_color_map_name: -1,
         metallic_map_name: 0,
+        subsurface_strength_map_name: 3,
         specular_map_name: 1,
         roughness_map_name: 2,
         transmission_map_name: 3,
-        ior_map_name: 3,
-        emission_color_map_name: -1,
+        emi_str_map_name: 3,
         alpha_map_name: 3,
+        bump_map_name: 0
     }
 
 map_color_layer = \
     {
-        color_map_name: layer_color_alpha,
-        subsurface_color_map_name: layer_sc_s,
-        subsurface_strength_map_name: layer_sc_s,
-        metallic_map_name: layer_msrt,
-        specular_map_name: layer_msrt,
-        roughness_map_name: layer_msrt,
-        transmission_map_name: layer_msrt,
-        ior_map_name: layer_emi_ior,
-        emission_color_map_name: layer_emi_ior,
-        alpha_map_name: layer_color_alpha,
+        color_map_name: layers.layer_color_alpha,
+        alpha_map_name: layers.layer_color_alpha,
+        subsurface_color_map_name: layers.layer_sc_s,
+        subsurface_strength_map_name: layers.layer_sc_s,
+        metallic_map_name: layers.layer_msrt,
+        specular_map_name: layers.layer_msrt,
+        roughness_map_name: layers.layer_msrt,
+        transmission_map_name: layers.layer_msrt,
+        emission_color_map_name: layers.layer_emi_emistr,
+        emi_str_map_name: layers.layer_emi_emistr,
+        bump_map_name: layers.layer_b
     }
+
 
 def map_is_color(map_value):
     return "color" in str(map_value).lower()

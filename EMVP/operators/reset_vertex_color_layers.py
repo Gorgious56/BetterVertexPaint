@@ -7,13 +7,14 @@ It can be used on all faces or only selected faces
 """
 
 import bpy
-from ..data.color_layers import set_layers_to_default, set_layer_to_default
-from ..data.maps import map_color_layer, all_maps
+from ..paint_logic.color_layers import set_layers_to_default, set_layer_to_default
+from ..paint_logic.maps import map_color_layer, all_maps
+from .context_manager import init_prev_mode, reset_previous_mode
+from ..paint_logic import on_setting_change
 
-
-class ResetVertexColorLayers(bpy.types.Operator):
+class BVP_ResetVertexColorLayers(bpy.types.Operator):
     """Reset Custom Vertex Colors Layers"""
-    bl_idname = "object.reset_vertex_color_layer"
+    bl_idname = "paint.reset_vertex_color_layer"
     bl_label = "Reset Vertex Colors Layers"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -43,21 +44,19 @@ class ResetVertexColorLayers(bpy.types.Operator):
 
     def execute(self, context):
         mesh = context.active_object.data
-        
-        prev_mode = None
-        if context.mode != 'OBJECT':
-            prev_mode = context.mode
-
-        bpy.ops.paint.vertex_paint_toggle()
-        bpy.ops.paint.vertex_paint_toggle()
 
         if self.only_selected_faces:
             if self.reset_all_maps:
                 set_layers_to_default(
-                    mesh, self.force_reset, only_selected=self.only_selected_faces)
+                    mesh,
+                    self.force_reset,
+                    only_selected=self.only_selected_faces)
             else:
                 set_layer_to_default(
-                    mesh, self.force_reset, map_color_layer[self.selected_map], only_selected=self.only_selected_faces)
+                    mesh,
+                    self.force_reset,
+                    map_color_layer[self.selected_map],
+                    only_selected=self.only_selected_faces)
 
         else:
             if self.reset_all_maps:
@@ -66,13 +65,8 @@ class ResetVertexColorLayers(bpy.types.Operator):
                 set_layer_to_default(mesh, self.force_reset,
                                      map_color_layer[self.selected_map])
 
+        on_setting_change.update_prefs(self, context)
 
-
-        if prev_mode:
-            if prev_mode == 'EDIT_MESH':
-                bpy.ops.object.mode_set(mode='EDIT')
-            else:
-                bpy.ops.object.mode_set(mode=prev_mode)
 
         return {'FINISHED'}
 
