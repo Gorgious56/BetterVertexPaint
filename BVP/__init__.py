@@ -6,14 +6,14 @@ from . import auto_load
 from .paint_logic import input_handler
 
 bl_info = {
-    "name": "EMVP",
+    "name": "BVP",
     "author": "Gorgious",
-    "description": "",
+    "description": "Add-on to extend the toolset of vertex paint for a PBR workflow",
     "blender": (2, 80, 0),
-    "version": (0, 0, 1),
+    "version": (0, 1, 1),
     "location": "",
     "warning": "",
-    "category": "Generic"
+    "category": "Paint"
 }
 
 al = auto_load.AutoLoad()

@@ -18,6 +18,7 @@ class VIEW3D_MT_registerer(bpy.types.Menu):
         bvp_main.draw_brush_reminder,
         bvp_main.draw_vertex_colors_reminder,
         bvp_main.draw_material_reminder,
+        bvp_main.set_vertex_colors_menu,
         bvp_main.vertex_map_submenu,
         bvp_main.vertex_color_strength_submenu,
     )

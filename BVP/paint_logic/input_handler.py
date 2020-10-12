@@ -8,7 +8,6 @@ from ..operators.set_vertex_colors import BVP_SetVertexColors
 
 
 def create_keymap():
-    keymap_items = bpy.context.window_manager.keyconfigs.addon.keymaps
     remove_keymap()
     keymap_items = bpy.context.window_manager.keyconfigs.addon.keymaps[
         '3D View Generic'].keymap_items

@@ -11,7 +11,7 @@ from ..operators.init_brush import InitBrush
 from ..paint_logic.maps import map_is_color, map_channels
 from ..paint_logic.color_layers import are_all_layers_created
 from ..paint_logic.brush_handler import get_brush, BVP_BRUSH_NAME, get_or_create_palette
-from ..addon_preferences import get_preferences
+from .. import addon_preferences
 
 
 paint_mode = 'PAINT_VERTEX'
@@ -28,6 +28,18 @@ def draw_brush_reminder(self, context):
         return
     if not is_brush_ok(context):
         VIEW3D_MT_bvp_settings.draw_custom_brush(context, self.layout)
+
+
+def set_vertex_colors_menu(self, context):
+    if context.mode != paint_mode:
+        return
+    if not get_brush() \
+            or not is_material_ok(context) \
+            or not are_vertex_colors_ok(context) \
+            or not is_brush_ok(context):
+        return
+    self.layout.operator(BVP_SetVertexColors.bl_idname, text="Paint !")
+
 
 
 def is_brush_ok(context):
@@ -68,14 +80,14 @@ def vertex_map_submenu(self, context):
             or not are_vertex_colors_ok(context) \
             or not is_brush_ok(context):
         return
-    prefs = get_preferences(context)
+    prefs = addon_preferences.get_preferences(context)
     self.layout.prop(prefs, "map")
 
 
 def vertex_color_strength_submenu(self, context):
     if context.mode != paint_mode:
         return
-    prefs = get_preferences(context)
+    prefs = addon_preferences.get_preferences(context)
     brush = get_brush()
     if not brush \
             or not is_material_ok(context) \
@@ -111,7 +123,8 @@ class VIEW3D_MT_bvp_settings(Menu):
     @staticmethod
     def draw_custom_brush(context, layout):
         layout.operator(InitBrush.bl_idname, icon="FILE_REFRESH" if
-                        is_brush_ok(context) else "ERROR")
+                        is_brush_ok(context) else "ERROR",
+                        text=f"Refresh {addon_preferences.BVPAddonPrefs.bl_idname} Brush")
 
     @staticmethod
     def draw_vertex_colors(context, layout):
@@ -139,11 +152,11 @@ class VIEW3D_MT_bvp_settings(Menu):
     def draw(self, context):
 
         layout = self.layout
-        layout.operator(
-            BVP_SetVertexColors.bl_idname, text="Set Vertex Colors")
+        # layout.operator(
+        #     BVP_SetVertexColors.bl_idname, text="Set Vertex Colors")
 
         self.draw_custom_brush(context, layout)
-        self.draw_vertex_colors(context, layout)
+        # self.draw_vertex_colors(context, layout)
 
         # mat = self.draw_pbr_material(context, layout)
         # if mat:
@@ -153,7 +166,7 @@ class VIEW3D_MT_bvp_settings(Menu):
         #                     text="Dirt Factor", slider=True)
 
         
-        prefs = get_preferences(context)
+        prefs = addon_preferences.get_preferences(context)
         _map = prefs.map
         mesh = context.active_object.data
 
