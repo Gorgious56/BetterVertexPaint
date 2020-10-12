@@ -39,22 +39,26 @@ class BVP_SetVertexColors(bpy.types.Operator):
 
         brush = get_brush()
         r, g, b, a = (brush.color[0], brush.color[1], brush.color[2], prefs.strength)
+        new_r = channel in (-1, 0)
+        new_g = channel in (-1, 1)
+        new_b = channel in (-1, 2)
+        new_a = channel == 3
+        a = prefs.strength
+        r = brush.color[0] * (1 if channel == -1 else a)
+        g = brush.color[1] * (1 if channel == -1 else a)
+        b = brush.color[2] * (1 if channel == -1 else a)
+
         for poly in mesh.polygons:
             if only_selected and not poly.select:
                 continue
             for idx in poly.loop_indices:
-                prev_color = color_layer.data[idx].color
+                prev_r, prev_g, prev_b, prev_a = color_layer.data[idx].color
                 color_layer.data[idx].color = \
                 [
-                    r if channel == -1 else (r * a if channel == 0 else prev_color[0]),
-                    g if channel == -1 else (g * a if channel == 1 else prev_color[1]),
-                    b if channel == -1 else (b * a if channel == 2 else prev_color[2]),
-                    a if channel == 3 else prev_color[3]
+                    r if new_r else prev_r,
+                    g if new_g else prev_g,
+                    b if new_b else prev_b,
+                    a if new_a else prev_a
                 ]
 
         return {'FINISHED'}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, "color")
-        layout.prop(self, "map")
